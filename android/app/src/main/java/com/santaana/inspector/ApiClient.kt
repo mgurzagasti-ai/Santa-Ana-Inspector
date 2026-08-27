@@ -42,4 +42,32 @@ class ApiClient {
             return response.isSuccessful
         }
     }
+
+    fun sendTrackingPoint(
+        inspectorId: String,
+        latitude: Double,
+        longitude: Double,
+        accuracy: Float,
+        phoneId: String
+    ): Boolean {
+        val payload = """
+            {
+              "inspectorId": "$inspectorId",
+              "timestamp": "${java.time.Instant.now()}",
+              "latitude": $latitude,
+              "longitude": $longitude,
+              "accuracyMeters": $accuracy,
+              "phoneId": "$phoneId"
+            }
+        """.trimIndent()
+
+        val request = Request.Builder()
+            .url("$BASE_URL/api/tracking")
+            .post(payload.toRequestBody(JSON))
+            .build()
+
+        client.newCall(request).execute().use { response ->
+            return response.isSuccessful
+        }
+    }
 }

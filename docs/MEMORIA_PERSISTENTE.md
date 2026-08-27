@@ -22,7 +22,9 @@ Construir una aplicacion Santa-Ana-Inspector con:
 - La APK debug compila con AndroidX habilitado y Java/Kotlin JVM target `17`.
 - La APK debug fue instalada por ADB en el dispositivo `M185ES003073C3100159`.
 - La APK para telefono fisico apunta al monitor web real en `http://192.168.88.175:3000`.
+- La APK inicia un servicio de rastreo en segundo plano al marcar Entrada y lo detiene al marcar Salida.
 - La API del monitor se implementa con rutas de Next.js bajo `web/app/api/`.
+- La API tiene endpoint `/api/tracking` para guardar puntos GPS periodicos del turno activo.
 - Los datos demo/persistidos se guardan en JSON bajo `web/data/`.
 - Se quito la tarjeta visual de la APK del monitor web.
 - El monitor web muestra un unico mapa general de San Salvador de Jujuy.

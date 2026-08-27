@@ -2,7 +2,9 @@ package com.santaana.inspector
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
@@ -129,7 +131,17 @@ class MainActivity : AppCompatActivity() {
                     phoneId
                 )
                 runOnUiThread {
-                    statusText.text = if (ok) "Marca enviada: $type" else "Error enviando marca"
+                    if (ok) {
+                        if (type == "entrada") {
+                            startTrackingService(inspectorId)
+                            statusText.text = "Turno abierto. Rastreo activo"
+                        } else {
+                            stopTrackingService()
+                            statusText.text = "Turno cerrado. Rastreo detenido"
+                        }
+                    } else {
+                        statusText.text = "Error enviando marca"
+                    }
                 }
             }
         }
@@ -138,12 +150,30 @@ class MainActivity : AppCompatActivity() {
     private fun requestLocationPermission() {
         val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
         if (fine != PackageManager.PERMISSION_GRANTED) {
+            val permissions = mutableListOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+                permissions.toTypedArray(),
                 locationPermissionCode
             )
         }
+    }
+
+    private fun startTrackingService(inspectorId: String) {
+        val intent = Intent(this, TrackingService::class.java).apply {
+            putExtra(TrackingService.EXTRA_INSPECTOR_ID, inspectorId)
+        }
+        ContextCompat.startForegroundService(this, intent)
+    }
+
+    private fun stopTrackingService() {
+        stopService(Intent(this, TrackingService::class.java))
     }
 
     private fun baseLayout(): LinearLayout {

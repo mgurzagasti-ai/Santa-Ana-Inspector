@@ -24,9 +24,20 @@ export type Checkin = {
   notes?: string;
 };
 
+export type TrackingPoint = {
+  id: string;
+  inspectorId: string;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+  phoneId?: string;
+};
+
 const dataDir = path.join(process.cwd(), "data");
 const checkinsFile = path.join(dataDir, "checkins.json");
 const inspectorsFile = path.join(dataDir, "inspectors.json");
+const trackingFile = path.join(dataDir, "tracking.json");
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
   try {
@@ -64,5 +75,20 @@ export async function createCheckin(input: Omit<Checkin, "id" | "inspectorName">
     inspectorName: inspector?.name ?? input.inspectorName ?? input.inspectorId
   };
   await writeJson(checkinsFile, [created, ...checkins]);
+  return created;
+}
+
+export async function getTrackingPoints() {
+  const points = await readJson<TrackingPoint[]>(trackingFile, []);
+  return points.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+export async function createTrackingPoint(input: Omit<TrackingPoint, "id">) {
+  const points = await getTrackingPoints();
+  const created: TrackingPoint = {
+    ...input,
+    id: crypto.randomUUID()
+  };
+  await writeJson(trackingFile, [created, ...points]);
   return created;
 }
