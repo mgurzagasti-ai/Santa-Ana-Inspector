@@ -19,14 +19,49 @@ type Checkin = {
   notes?: string;
 };
 
+type TrackingPoint = {
+  id: string;
+  inspectorId: string;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+  phoneId?: string;
+};
+
+type MapPoint = {
+  inspectorId: string;
+  inspectorName?: string;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  accuracyMeters?: number;
+  source: "rastreo" | "marca";
+};
+
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat("es-AR", {
     dateStyle: "short",
     timeStyle: "short"
   }).format(new Date(value));
 
-const generalMapUrl =
-  "https://www.openstreetmap.org/export/embed.html?bbox=-65.3600%2C-24.2300%2C-65.2500%2C-24.1400&layer=mapnik&marker=-24.1858%2C-65.2995";
+const fallbackMapPoint: MapPoint = {
+  inspectorId: "jujuy",
+  inspectorName: "San Salvador de Jujuy",
+  timestamp: new Date().toISOString(),
+  latitude: -24.1858,
+  longitude: -65.2995,
+  source: "rastreo"
+};
+
+const mapUrl = (point: MapPoint) => {
+  const delta = 0.012;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${point.longitude - delta}%2C${
+    point.latitude - delta
+  }%2C${point.longitude + delta}%2C${point.latitude + delta}&layer=mapnik&marker=${point.latitude}%2C${
+    point.longitude
+  }`;
+};
 
 const toLocalDateValue = (value: Date) => {
   const offsetDate = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
@@ -37,6 +72,7 @@ const toMonthValue = (value: Date) => toLocalDateValue(value).slice(0, 7);
 
 export default function Home() {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
+  const [tracking, setTracking] = useState<TrackingPoint[]>([]);
   const [inspectorFilter, setInspectorFilter] = useState("todos");
   const [dayFilter, setDayFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState(() => toMonthValue(new Date()));
@@ -44,9 +80,14 @@ export default function Home() {
 
   const load = async () => {
     setLoading(true);
-    const response = await fetch("/api/checkins", { cache: "no-store" });
-    const data = (await response.json()) as { checkins: Checkin[] };
-    setCheckins(data.checkins);
+    const [checkinsResponse, trackingResponse] = await Promise.all([
+      fetch("/api/checkins", { cache: "no-store" }),
+      fetch("/api/tracking", { cache: "no-store" })
+    ]);
+    const checkinsData = (await checkinsResponse.json()) as { checkins: Checkin[] };
+    const trackingData = (await trackingResponse.json()) as { tracking: TrackingPoint[] };
+    setCheckins(checkinsData.checkins);
+    setTracking(trackingData.tracking);
     setLoading(false);
   };
 
@@ -68,8 +109,14 @@ export default function Home() {
   }, [checkins, inspectorFilter, dayFilter, monthFilter]);
 
   const inspectors = useMemo(
-    () => Array.from(new Map(checkins.map((item) => [item.inspectorId, item.inspectorName])).entries()),
-    [checkins]
+    () =>
+      Array.from(
+        new Map([
+          ...checkins.map((item) => [item.inspectorId, item.inspectorName] as const),
+          ...tracking.map((item) => [item.inspectorId, item.inspectorId] as const)
+        ]).entries()
+      ),
+    [checkins, tracking]
   );
 
   const latestByInspector = useMemo(() => {
@@ -86,6 +133,42 @@ export default function Home() {
   const activeCount = latestByInspector.filter((item) => item.type === "entrada").length;
   const entriesInReport = filtered.filter((item) => item.type === "entrada").length;
   const exitsInReport = filtered.filter((item) => item.type === "salida").length;
+  const filteredTracking = useMemo(() => {
+    return tracking.filter((item) => {
+      const itemDate = toLocalDateValue(new Date(item.timestamp));
+      const matchesInspector = inspectorFilter === "todos" || item.inspectorId === inspectorFilter;
+      const matchesDay = dayFilter ? itemDate === dayFilter : true;
+      const matchesMonth = !dayFilter && monthFilter ? itemDate.startsWith(monthFilter) : true;
+
+      return matchesInspector && matchesDay && matchesMonth;
+    });
+  }, [tracking, inspectorFilter, dayFilter, monthFilter]);
+
+  const currentMapPoint = useMemo<MapPoint>(() => {
+    const latestTracking = filteredTracking[0];
+    if (latestTracking) {
+      return {
+        ...latestTracking,
+        inspectorName: inspectors.find(([id]) => id === latestTracking.inspectorId)?.[1],
+        source: "rastreo"
+      };
+    }
+
+    const latestCheckin = filtered[0];
+    if (latestCheckin) {
+      return {
+        inspectorId: latestCheckin.inspectorId,
+        inspectorName: latestCheckin.inspectorName,
+        timestamp: latestCheckin.timestamp,
+        latitude: latestCheckin.latitude,
+        longitude: latestCheckin.longitude,
+        accuracyMeters: latestCheckin.accuracyMeters,
+        source: "marca"
+      };
+    }
+
+    return fallbackMapPoint;
+  }, [filtered, filteredTracking, inspectors]);
 
   return (
     <main className="app-shell">
@@ -131,12 +214,15 @@ export default function Home() {
           <div className="general-map">
             <iframe
               className="general-map-frame"
-              src={generalMapUrl}
-              title="Mapa general de San Salvador de Jujuy"
+              src={mapUrl(currentMapPoint)}
+              title="Mapa de ultima ubicacion del inspector"
             />
             <div className="general-map-footer">
-              <strong>San Salvador de Jujuy</strong>
-              <span>{filtered.length} marcas visibles</span>
+              <strong>{currentMapPoint.inspectorName ?? currentMapPoint.inspectorId}</strong>
+              <span>
+                {currentMapPoint.source} - {formatDateTime(currentMapPoint.timestamp)} -{" "}
+                {currentMapPoint.latitude.toFixed(6)}, {currentMapPoint.longitude.toFixed(6)}
+              </span>
             </div>
           </div>
 

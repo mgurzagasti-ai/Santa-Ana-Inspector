@@ -29,6 +29,7 @@ Construir una aplicacion Santa-Ana-Inspector con:
 - Se quito la tarjeta visual de la APK del monitor web.
 - El monitor web muestra un unico mapa general de San Salvador de Jujuy.
 - Se agregaron registros de marcas con filtros por inspector, dia y mes.
+- El mapa unico del monitor ahora se centra en la ultima ubicacion real recibida por `/api/tracking`; si no hay rastreo, usa la ultima marca.
 
 ## Logo
 
