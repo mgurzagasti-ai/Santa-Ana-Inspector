@@ -235,6 +235,25 @@ select {
   width: 100%;
 }
 
+.empty-map {
+  align-items: center;
+  background: #f1f1eb;
+  border: 1px dashed #bbb5a4;
+  border-radius: 8px;
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
+  height: 260px;
+  justify-items: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.empty-map strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
 .general-map-footer {
   align-items: center;
   display: flex;

@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, RefreshCcw } from "lucide-react";
+import { CalendarDays, Clock, MapPinOff, RefreshCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -36,7 +36,7 @@ type MapPoint = {
   latitude: number;
   longitude: number;
   accuracyMeters?: number;
-  source: "rastreo" | "marca";
+  source: "rastreo";
 };
 
 const formatDateTime = (value: string) =>
@@ -44,15 +44,6 @@ const formatDateTime = (value: string) =>
     dateStyle: "short",
     timeStyle: "short"
   }).format(new Date(value));
-
-const fallbackMapPoint: MapPoint = {
-  inspectorId: "jujuy",
-  inspectorName: "San Salvador de Jujuy",
-  timestamp: new Date().toISOString(),
-  latitude: -24.1858,
-  longitude: -65.2995,
-  source: "rastreo"
-};
 
 const mapUrl = (point: MapPoint) => {
   const delta = 0.012;
@@ -131,20 +122,25 @@ export default function Home() {
   }, [checkins]);
 
   const activeCount = latestByInspector.filter((item) => item.type === "entrada").length;
+  const activeInspectorIds = useMemo(
+    () => new Set(latestByInspector.filter((item) => item.type === "entrada").map((item) => item.inspectorId)),
+    [latestByInspector]
+  );
   const entriesInReport = filtered.filter((item) => item.type === "entrada").length;
   const exitsInReport = filtered.filter((item) => item.type === "salida").length;
   const filteredTracking = useMemo(() => {
     return tracking.filter((item) => {
       const itemDate = toLocalDateValue(new Date(item.timestamp));
       const matchesInspector = inspectorFilter === "todos" || item.inspectorId === inspectorFilter;
+      const isActive = activeInspectorIds.has(item.inspectorId);
       const matchesDay = dayFilter ? itemDate === dayFilter : true;
       const matchesMonth = !dayFilter && monthFilter ? itemDate.startsWith(monthFilter) : true;
 
-      return matchesInspector && matchesDay && matchesMonth;
+      return isActive && matchesInspector && matchesDay && matchesMonth;
     });
-  }, [tracking, inspectorFilter, dayFilter, monthFilter]);
+  }, [tracking, inspectorFilter, dayFilter, monthFilter, activeInspectorIds]);
 
-  const currentMapPoint = useMemo<MapPoint>(() => {
+  const currentMapPoint = useMemo<MapPoint | null>(() => {
     const latestTracking = filteredTracking[0];
     if (latestTracking) {
       return {
@@ -154,21 +150,8 @@ export default function Home() {
       };
     }
 
-    const latestCheckin = filtered[0];
-    if (latestCheckin) {
-      return {
-        inspectorId: latestCheckin.inspectorId,
-        inspectorName: latestCheckin.inspectorName,
-        timestamp: latestCheckin.timestamp,
-        latitude: latestCheckin.latitude,
-        longitude: latestCheckin.longitude,
-        accuracyMeters: latestCheckin.accuracyMeters,
-        source: "marca"
-      };
-    }
-
-    return fallbackMapPoint;
-  }, [filtered, filteredTracking, inspectors]);
+    return null;
+  }, [filteredTracking, inspectors]);
 
   return (
     <main className="app-shell">
@@ -212,18 +195,28 @@ export default function Home() {
           </div>
 
           <div className="general-map">
-            <iframe
-              className="general-map-frame"
-              src={mapUrl(currentMapPoint)}
-              title="Mapa de ultima ubicacion del inspector"
-            />
-            <div className="general-map-footer">
-              <strong>{currentMapPoint.inspectorName ?? currentMapPoint.inspectorId}</strong>
-              <span>
-                {currentMapPoint.source} - {formatDateTime(currentMapPoint.timestamp)} -{" "}
-                {currentMapPoint.latitude.toFixed(6)}, {currentMapPoint.longitude.toFixed(6)}
-              </span>
-            </div>
+            {currentMapPoint ? (
+              <>
+                <iframe
+                  className="general-map-frame"
+                  src={mapUrl(currentMapPoint)}
+                  title="Mapa de ultima ubicacion activa del inspector"
+                />
+                <div className="general-map-footer">
+                  <strong>{currentMapPoint.inspectorName ?? currentMapPoint.inspectorId}</strong>
+                  <span>
+                    turno activo - {formatDateTime(currentMapPoint.timestamp)} -{" "}
+                    {currentMapPoint.latitude.toFixed(6)}, {currentMapPoint.longitude.toFixed(6)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="empty-map">
+                <MapPinOff size={34} />
+                <strong>Sin inspectores activos</strong>
+                <span>La ubicacion desaparece cuando el inspector marca salida.</span>
+              </div>
+            )}
           </div>
 
           <div className="filters-bar">
