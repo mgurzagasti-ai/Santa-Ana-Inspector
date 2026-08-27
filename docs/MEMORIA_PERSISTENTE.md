@@ -23,6 +23,8 @@ Construir una aplicacion Santa-Ana-Inspector con:
 - La APK debug fue instalada por ADB en el dispositivo `M185ES003073C3100159`.
 - La API del monitor se implementa con rutas de Next.js bajo `web/app/api/`.
 - Los datos demo/persistidos se guardan en JSON bajo `web/data/`.
+- Se quito la tarjeta visual de la APK del monitor web.
+- El monitor web muestra un unico mapa general de San Salvador de Jujuy.
 
 ## Logo
 

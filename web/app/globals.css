@@ -102,7 +102,7 @@ select {
 .content {
   display: grid;
   gap: 18px;
-  grid-template-columns: 1.4fr 0.9fr;
+  grid-template-columns: 1fr;
   padding: 22px 28px 32px;
 }
 
@@ -155,33 +155,29 @@ select {
   padding: 0 10px;
 }
 
-.map-grid {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.general-map {
   padding: 14px;
 }
 
-.location-card {
+.general-map-frame {
+  background: #efefea;
   border: 1px solid var(--line);
   border-radius: 8px;
-  min-height: 190px;
-  overflow: hidden;
-}
-
-.map-frame {
-  background: #efefea;
-  border: 0;
   display: block;
-  height: 145px;
+  height: 420px;
   width: 100%;
 }
 
-.location-card footer {
+.general-map-footer {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 10px 2px 0;
+}
+
+.general-map-footer span {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .chip {
@@ -227,91 +223,6 @@ th {
   text-transform: uppercase;
 }
 
-.login-preview {
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-}
-
-.phone {
-  background: #111;
-  border-radius: 28px;
-  margin: 0 auto;
-  max-width: 310px;
-  padding: 12px;
-  width: 100%;
-}
-
-.phone-screen {
-  background: #fff;
-  border-radius: 20px;
-  display: grid;
-  gap: 14px;
-  min-height: 520px;
-  padding: 22px;
-}
-
-.phone-screen img {
-  margin: 10px auto 0;
-  width: 210px;
-}
-
-.field {
-  display: grid;
-  gap: 6px;
-}
-
-.field label {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.field input {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  height: 42px;
-  padding: 0 12px;
-}
-
-.primary {
-  background: #111;
-  border: 0;
-  border-radius: 8px;
-  color: #fff;
-  cursor: pointer;
-  font-weight: 700;
-  min-height: 42px;
-}
-
-.actions {
-  display: grid;
-  gap: 10px;
-  grid-template-columns: 1fr 1fr;
-}
-
-.entry {
-  background: var(--green);
-}
-
-.exit {
-  background: var(--red);
-}
-
-.api-note {
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
-  padding: 14px 16px;
-}
-
-@media (max-width: 1000px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-}
-
 @media (max-width: 720px) {
   .topbar {
     align-items: flex-start;
@@ -323,8 +234,8 @@ th {
     padding: 14px;
   }
 
-  .map-grid {
-    grid-template-columns: 1fr;
+  .general-map-frame {
+    height: 320px;
   }
 
   th,

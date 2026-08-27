@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, LocateFixed, RefreshCcw } from "lucide-react";
+import { Clock, RefreshCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -25,12 +25,8 @@ const formatDateTime = (value: string) =>
     timeStyle: "short"
   }).format(new Date(value));
 
-const mapUrl = (checkin: Checkin) =>
-  `https://www.openstreetmap.org/export/embed.html?bbox=${checkin.longitude - 0.01}%2C${
-    checkin.latitude - 0.01
-  }%2C${checkin.longitude + 0.01}%2C${checkin.latitude + 0.01}&layer=mapnik&marker=${
-    checkin.latitude
-  }%2C${checkin.longitude}`;
+const generalMapUrl =
+  "https://www.openstreetmap.org/export/embed.html?bbox=-65.3600%2C-24.2300%2C-65.2500%2C-24.1400&layer=mapnik&marker=-24.1858%2C-65.2995";
 
 export default function Home() {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
@@ -120,19 +116,16 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="map-grid">
-            {filtered.slice(0, 6).map((item) => (
-              <article className="location-card" key={item.id}>
-                <iframe className="map-frame" src={mapUrl(item)} title={`Mapa de ${item.inspectorName}`} />
-                <footer>
-                  <div>
-                    <strong>{item.inspectorName}</strong>
-                    <div className="muted">{formatDateTime(item.timestamp)}</div>
-                  </div>
-                  <span className={`chip ${item.type === "entrada" ? "in" : "out"}`}>{item.type}</span>
-                </footer>
-              </article>
-            ))}
+          <div className="general-map">
+            <iframe
+              className="general-map-frame"
+              src={generalMapUrl}
+              title="Mapa general de San Salvador de Jujuy"
+            />
+            <div className="general-map-footer">
+              <strong>San Salvador de Jujuy</strong>
+              <span>{filtered.length} marcas visibles</span>
+            </div>
           </div>
 
           <div className="table-wrap">
@@ -166,39 +159,6 @@ export default function Home() {
             </table>
           </div>
         </div>
-
-        <aside className="panel">
-          <div className="panel-header">
-            <h2>APK inspector</h2>
-            <LocateFixed size={20} />
-          </div>
-          <div className="login-preview">
-            <div className="phone">
-              <div className="phone-screen">
-                <Image src="/LogoB.png" alt="Santa Ana" width={220} height={70} />
-                <div className="field">
-                  <label>Legajo</label>
-                  <input value="INS-001" readOnly />
-                </div>
-                <div className="field">
-                  <label>Clave</label>
-                  <input value="********" readOnly />
-                </div>
-                <button className="primary" type="button">Ingresar</button>
-                <div className="actions">
-                  <button className="primary entry" type="button">Entrada</button>
-                  <button className="primary exit" type="button">Salida</button>
-                </div>
-                <p className="muted">
-                  La APK Kotlin envia legajo, horario, latitud, longitud y precision GPS al endpoint del monitor.
-                </p>
-              </div>
-            </div>
-          </div>
-          <p className="api-note">
-            Para conectar tu API ya hecha de colectivos, configurar `COLECTIVOS_API_URL` en el entorno del monitor.
-          </p>
-        </aside>
       </section>
     </main>
   );
