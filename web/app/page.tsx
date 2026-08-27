@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, RefreshCcw } from "lucide-react";
+import { CalendarDays, Clock, RefreshCcw } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -28,9 +28,18 @@ const formatDateTime = (value: string) =>
 const generalMapUrl =
   "https://www.openstreetmap.org/export/embed.html?bbox=-65.3600%2C-24.2300%2C-65.2500%2C-24.1400&layer=mapnik&marker=-24.1858%2C-65.2995";
 
+const toLocalDateValue = (value: Date) => {
+  const offsetDate = new Date(value.getTime() - value.getTimezoneOffset() * 60000);
+  return offsetDate.toISOString().slice(0, 10);
+};
+
+const toMonthValue = (value: Date) => toLocalDateValue(value).slice(0, 7);
+
 export default function Home() {
   const [checkins, setCheckins] = useState<Checkin[]>([]);
-  const [filter, setFilter] = useState("todos");
+  const [inspectorFilter, setInspectorFilter] = useState("todos");
+  const [dayFilter, setDayFilter] = useState("");
+  const [monthFilter, setMonthFilter] = useState(() => toMonthValue(new Date()));
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -48,9 +57,15 @@ export default function Home() {
   }, []);
 
   const filtered = useMemo(() => {
-    if (filter === "todos") return checkins;
-    return checkins.filter((item) => item.inspectorId === filter);
-  }, [checkins, filter]);
+    return checkins.filter((item) => {
+      const itemDate = toLocalDateValue(new Date(item.timestamp));
+      const matchesInspector = inspectorFilter === "todos" || item.inspectorId === inspectorFilter;
+      const matchesDay = dayFilter ? itemDate === dayFilter : true;
+      const matchesMonth = !dayFilter && monthFilter ? itemDate.startsWith(monthFilter) : true;
+
+      return matchesInspector && matchesDay && matchesMonth;
+    });
+  }, [checkins, inspectorFilter, dayFilter, monthFilter]);
 
   const inspectors = useMemo(
     () => Array.from(new Map(checkins.map((item) => [item.inspectorId, item.inspectorName])).entries()),
@@ -69,7 +84,8 @@ export default function Home() {
   }, [checkins]);
 
   const activeCount = latestByInspector.filter((item) => item.type === "entrada").length;
-  const exitsToday = checkins.filter((item) => item.type === "salida").length;
+  const entriesInReport = filtered.filter((item) => item.type === "entrada").length;
+  const exitsInReport = filtered.filter((item) => item.type === "salida").length;
 
   return (
     <main className="app-shell">
@@ -87,8 +103,12 @@ export default function Home() {
             <strong>{activeCount}</strong>
           </div>
           <div className="metric">
-            <span>Marcas de salida</span>
-            <strong>{exitsToday}</strong>
+            <span>Entradas filtradas</span>
+            <strong>{entriesInReport}</strong>
+          </div>
+          <div className="metric">
+            <span>Salidas filtradas</span>
+            <strong>{exitsInReport}</strong>
           </div>
           <div className="metric">
             <span>Actualizacion</span>
@@ -100,16 +120,8 @@ export default function Home() {
       <section className="content">
         <div className="panel">
           <div className="panel-header">
-            <h1>Ubicacion en tiempo real</h1>
+            <h1>Registros de marcas</h1>
             <div className="toolbar">
-              <select className="select" value={filter} onChange={(event) => setFilter(event.target.value)}>
-                <option value="todos">Todos</option>
-                {inspectors.map(([id, name]) => (
-                  <option key={id} value={id}>
-                    {name}
-                  </option>
-                ))}
-              </select>
               <button className="icon-button" type="button" onClick={load} title="Actualizar">
                 <RefreshCcw size={18} />
               </button>
@@ -125,6 +137,65 @@ export default function Home() {
             <div className="general-map-footer">
               <strong>San Salvador de Jujuy</strong>
               <span>{filtered.length} marcas visibles</span>
+            </div>
+          </div>
+
+          <div className="filters-bar">
+            <label className="filter-field">
+              <span>Inspector</span>
+              <select
+                className="select"
+                value={inspectorFilter}
+                onChange={(event) => setInspectorFilter(event.target.value)}
+              >
+                <option value="todos">Todos</option>
+                {inspectors.map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="filter-field">
+              <span>Dia</span>
+              <input className="date-input" type="date" value={dayFilter} onChange={(event) => setDayFilter(event.target.value)} />
+            </label>
+            <label className="filter-field">
+              <span>Mes</span>
+              <input
+                className="date-input"
+                type="month"
+                value={monthFilter}
+                onChange={(event) => setMonthFilter(event.target.value)}
+                disabled={Boolean(dayFilter)}
+              />
+            </label>
+            <button
+              className="clear-button"
+              type="button"
+              onClick={() => {
+                setInspectorFilter("todos");
+                setDayFilter("");
+                setMonthFilter("");
+              }}
+            >
+              Limpiar
+            </button>
+          </div>
+
+          <div className="report-summary">
+            <div>
+              <CalendarDays size={18} />
+              <strong>{filtered.length}</strong>
+              <span>marcas</span>
+            </div>
+            <div>
+              <span className="chip in">entrada</span>
+              <strong>{entriesInReport}</strong>
+            </div>
+            <div>
+              <span className="chip out">salida</span>
+              <strong>{exitsInReport}</strong>
             </div>
           </div>
 

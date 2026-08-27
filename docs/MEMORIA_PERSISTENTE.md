@@ -25,6 +25,7 @@ Construir una aplicacion Santa-Ana-Inspector con:
 - Los datos demo/persistidos se guardan en JSON bajo `web/data/`.
 - Se quito la tarjeta visual de la APK del monitor web.
 - El monitor web muestra un unico mapa general de San Salvador de Jujuy.
+- Se agregaron registros de marcas con filtros por inspector, dia y mes.
 
 ## Logo
 
