@@ -29,3 +29,9 @@ Abrir `http://localhost:3000`.
 El proyecto Android esta en `android/`. Requiere Android Studio, JDK y Android SDK para compilar la APK.
 
 Configurar la URL del monitor/API en `android/app/src/main/java/com/santaana/inspector/ApiClient.kt`.
+
+Para telefono fisico conectado a la misma red que esta PC, la APK debug actual apunta a:
+
+```text
+http://192.168.88.175:3000
+```

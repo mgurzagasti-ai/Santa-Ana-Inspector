@@ -9,7 +9,7 @@ class ApiClient {
     private val client = OkHttpClient()
 
     companion object {
-        const val BASE_URL = "http://10.0.2.2:3000"
+        const val BASE_URL = "http://192.168.88.175:3000"
         private val JSON = "application/json; charset=utf-8".toMediaType()
     }
 
