@@ -19,6 +19,8 @@ Construir una aplicacion Santa-Ana-Inspector con:
 - El monitor web vive en `web/`.
 - El monitor web fue actualizado a Next.js `16.3.3` luego de auditoria npm.
 - La APK Kotlin vive en `android/`.
+- La APK debug compila con AndroidX habilitado y Java/Kotlin JVM target `17`.
+- La APK debug fue instalada por ADB en el dispositivo `M185ES003073C3100159`.
 - La API del monitor se implementa con rutas de Next.js bajo `web/app/api/`.
 - Los datos demo/persistidos se guardan en JSON bajo `web/data/`.
 
@@ -43,6 +45,5 @@ Para conectarlo con la API ya existente de colectivos, configurar:
 
 ## Pendientes tecnicos
 
-- Instalar JDK y Android Studio/SDK para compilar la APK.
+- Para compilar en esta PC se uso Java en `E:\1\jbr` y SDK en `E:\Android\Sdk`.
 - Conectar el endpoint `/api/colectivos` a la API real existente.
-- Reemplazar el logo SVG por `LogoB.png` si se obtiene acceso al archivo original.
