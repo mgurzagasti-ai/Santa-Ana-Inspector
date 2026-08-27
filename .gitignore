@@ -1,0 +1,27 @@
+node_modules/
+.next/
+web/.next/
+out/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+
+# Android / Gradle
+.gradle/
+android/.gradle/
+android/local.properties
+android/app/build/
+android/build/
+*.apk
+*.aab
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+Desktop.ini

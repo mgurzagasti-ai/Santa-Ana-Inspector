@@ -1,0 +1,7 @@
+<resources>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="santa_yellow">#FFF200</color>
+    <color name="santa_green">#138A54</color>
+    <color name="santa_red">#BE3144</color>
+</resources>

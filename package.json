@@ -1,0 +1,13 @@
+{
+  "name": "santa-ana-inspector",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm --workspace web run dev --",
+    "build": "npm --workspace web run build",
+    "start": "npm --workspace web run start"
+  }
+}

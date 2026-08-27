@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 260" role="img" aria-labelledby="title">
+  <title id="title">Santa Ana</title>
+  <rect width="920" height="260" fill="#ffffff"/>
+  <ellipse cx="470" cy="126" rx="405" ry="77" fill="none" stroke="#444" stroke-width="4" transform="rotate(-14 470 126)"/>
+  <ellipse cx="470" cy="132" rx="405" ry="77" fill="none" stroke="#444" stroke-width="3" transform="rotate(-14 470 132)"/>
+  <circle cx="136" cy="130" r="78" fill="#000"/>
+  <circle cx="650" cy="130" r="78" fill="#000"/>
+  <text x="78" y="166" font-family="Georgia, serif" font-weight="900" font-size="142" fill="#fff200">S</text>
+  <text x="226" y="166" font-family="Georgia, serif" font-weight="900" font-size="104" fill="#000">anta</text>
+  <text x="606" y="166" font-family="Georgia, serif" font-weight="900" font-size="142" fill="#fff200">A</text>
+  <text x="742" y="166" font-family="Georgia, serif" font-weight="900" font-size="104" fill="#000">na</text>
+</svg>

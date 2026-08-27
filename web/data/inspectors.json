@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ins-001",
+    "name": "Inspector Central",
+    "employeeCode": "INS-001",
+    "pin": "1234",
+    "active": true
+  },
+  {
+    "id": "ins-002",
+    "name": "Inspector Norte",
+    "employeeCode": "INS-002",
+    "pin": "1234",
+    "active": true
+  }
+]
