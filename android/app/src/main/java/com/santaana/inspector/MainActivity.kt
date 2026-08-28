@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import android.view.Gravity
 import android.widget.Button
 import android.widget.EditText
@@ -64,8 +65,20 @@ class MainActivity : AppCompatActivity() {
                 val legajo = employeeInput.text.toString().trim()
                 val pin = pinInput.text.toString().trim()
                 if (legajo.isNotEmpty() && pin.isNotEmpty()) {
-                    loggedInspectorId = legajo
-                    renderCheckin()
+                    statusText.text = "Validando inspector..."
+                    isEnabled = false
+                    thread {
+                        val inspectorId = api.login(legajo, pin)
+                        runOnUiThread {
+                            isEnabled = true
+                            if (inspectorId != null) {
+                                loggedInspectorId = inspectorId
+                                renderCheckin()
+                            } else {
+                                statusText.text = "No se pudo ingresar. Revise legajo, clave o conexion"
+                            }
+                        }
+                    }
                 } else {
                     statusText.text = "Complete legajo y clave"
                 }
@@ -111,6 +124,12 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun mark(type: String) {
         val inspectorId = loggedInspectorId ?: return
+        if (!hasLocationPermission()) {
+            statusText.text = "Permiso de ubicacion requerido"
+            requestLocationPermission()
+            return
+        }
+
         statusText.text = "Obteniendo ubicacion..."
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
@@ -144,6 +163,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }.addOnFailureListener {
+            statusText.text = "No se pudo obtener ubicacion GPS"
         }
     }
 
@@ -169,7 +190,12 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, TrackingService::class.java).apply {
             putExtra(TrackingService.EXTRA_INSPECTOR_ID, inspectorId)
         }
-        ContextCompat.startForegroundService(this, intent)
+        try {
+            ContextCompat.startForegroundService(this, intent)
+        } catch (_: RuntimeException) {
+            statusText.text = "No se pudo iniciar el rastreo"
+            Toast.makeText(this, "Revise permisos de ubicacion", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun stopTrackingService() {
@@ -182,5 +208,11 @@ class MainActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
             setPadding(36, 36, 36, 36)
         }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        val coarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        return fine == PackageManager.PERMISSION_GRANTED || coarse == PackageManager.PERMISSION_GRANTED
     }
 }

@@ -4,12 +4,15 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
+import java.time.Instant
 
 class ApiClient {
     private val client = OkHttpClient()
 
     companion object {
-        const val BASE_URL = "http://192.168.88.175:3000"
+        val BASE_URL = BuildConfig.API_BASE_URL.trimEnd('/')
         private val JSON = "application/json; charset=utf-8".toMediaType()
     }
 
@@ -21,25 +24,39 @@ class ApiClient {
         accuracy: Float,
         phoneId: String
     ): Boolean {
-        val payload = """
-            {
-              "inspectorId": "$inspectorId",
-              "type": "$type",
-              "timestamp": "${java.time.Instant.now()}",
-              "latitude": $latitude,
-              "longitude": $longitude,
-              "accuracyMeters": $accuracy,
-              "phoneId": "$phoneId"
-            }
-        """.trimIndent()
+        val payload = JSONObject()
+            .put("inspectorId", inspectorId)
+            .put("type", type)
+            .put("timestamp", Instant.now().toString())
+            .put("latitude", latitude)
+            .put("longitude", longitude)
+            .put("accuracyMeters", accuracy)
+            .put("phoneId", phoneId)
+            .toString()
+
+        return postJson("$BASE_URL/api/checkins", payload)
+    }
+
+    fun login(employeeCode: String, pin: String): String? {
+        val payload = JSONObject()
+            .put("employeeCode", employeeCode)
+            .put("pin", pin)
+            .toString()
 
         val request = Request.Builder()
-            .url("$BASE_URL/api/checkins")
+            .url("$BASE_URL/api/inspectors/login")
             .post(payload.toRequestBody(JSON))
             .build()
 
-        client.newCall(request).execute().use { response ->
-            return response.isSuccessful
+        return try {
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return null
+
+                val body = response.body?.string() ?: return null
+                JSONObject(body).getJSONObject("inspector").getString("id")
+            }
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -50,24 +67,30 @@ class ApiClient {
         accuracy: Float,
         phoneId: String
     ): Boolean {
-        val payload = """
-            {
-              "inspectorId": "$inspectorId",
-              "timestamp": "${java.time.Instant.now()}",
-              "latitude": $latitude,
-              "longitude": $longitude,
-              "accuracyMeters": $accuracy,
-              "phoneId": "$phoneId"
-            }
-        """.trimIndent()
+        val payload = JSONObject()
+            .put("inspectorId", inspectorId)
+            .put("timestamp", Instant.now().toString())
+            .put("latitude", latitude)
+            .put("longitude", longitude)
+            .put("accuracyMeters", accuracy)
+            .put("phoneId", phoneId)
+            .toString()
 
+        return postJson("$BASE_URL/api/tracking", payload)
+    }
+
+    private fun postJson(url: String, payload: String): Boolean {
         val request = Request.Builder()
-            .url("$BASE_URL/api/tracking")
+            .url(url)
             .post(payload.toRequestBody(JSON))
             .build()
 
-        client.newCall(request).execute().use { response ->
-            return response.isSuccessful
+        return try {
+            client.newCall(request).execute().use { response ->
+                response.isSuccessful
+            }
+        } catch (_: IOException) {
+            false
         }
     }
 }

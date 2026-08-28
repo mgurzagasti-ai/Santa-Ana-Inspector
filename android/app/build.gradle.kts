@@ -13,6 +13,17 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+
+        val apiBaseUrl = providers.gradleProperty("API_BASE_URL")
+            .orElse(providers.environmentVariable("API_BASE_URL"))
+            .orElse("https://santa-ana-inspector-web.vercel.app")
+            .get()
+            .trimEnd('/')
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     compileOptions {

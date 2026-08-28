@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createTrackingPoint, getTrackingPoints } from "../../../lib/storage";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   const tracking = await getTrackingPoints();
   return NextResponse.json({ tracking });

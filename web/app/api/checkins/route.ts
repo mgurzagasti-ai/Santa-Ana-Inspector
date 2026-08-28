@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createCheckin, getCheckins } from "../../../lib/storage";
 
+export const runtime = "nodejs";
+
 export async function GET() {
   const checkins = await getCheckins();
   return NextResponse.json({ checkins });
