@@ -39,11 +39,12 @@ const dataDir = path.join(process.cwd(), "data");
 const checkinsFile = path.join(dataDir, "checkins.json");
 const inspectorsFile = path.join(dataDir, "inspectors.json");
 const trackingFile = path.join(dataDir, "tracking.json");
-const databaseUrl =
-  process.env.DATABASE_URL ??
-  process.env.PG_DATABASE_URL ??
-  process.env.PG_POSTGRES_URL ??
-  process.env.PG_PRISMA_DATABASE_URL;
+const databaseUrl = [
+  process.env.PG_POSTGRES_URL,
+  process.env.PG_DATABASE_URL,
+  process.env.POSTGRES_URL,
+  process.env.DATABASE_URL
+].find(isPostgresUrl);
 const hasDatabase = Boolean(databaseUrl);
 
 const globalForPg = globalThis as unknown as {
@@ -399,4 +400,8 @@ export async function createTrackingPoint(input: Omit<TrackingPoint, "id">) {
 
 function isUniqueViolation(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
+}
+
+function isPostgresUrl(value?: string) {
+  return Boolean(value?.startsWith("postgres://") || value?.startsWith("postgresql://"));
 }

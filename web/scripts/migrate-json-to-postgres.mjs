@@ -3,14 +3,15 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { Pool } from "pg";
 
-const databaseUrl =
-  process.env.DATABASE_URL ??
-  process.env.PG_DATABASE_URL ??
-  process.env.PG_POSTGRES_URL ??
-  process.env.PG_PRISMA_DATABASE_URL;
+const databaseUrl = [
+  process.env.PG_POSTGRES_URL,
+  process.env.PG_DATABASE_URL,
+  process.env.POSTGRES_URL,
+  process.env.DATABASE_URL
+].find((value) => value?.startsWith("postgres://") || value?.startsWith("postgresql://"));
 
 if (!databaseUrl) {
-  console.error("Falta DATABASE_URL o una variable PG_* de Prisma Postgres. Configurala antes de migrar.");
+  console.error("Falta una URL Postgres valida: PG_POSTGRES_URL, PG_DATABASE_URL, POSTGRES_URL o DATABASE_URL.");
   process.exit(1);
 }
 
