@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, MapPinOff, Pencil, Plus, RefreshCcw, Save, Trash2, UserCog, X } from "lucide-react";
+import { CalendarDays, Clock, Pencil, Plus, RefreshCcw, Save, Trash2, UserCog, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
@@ -68,13 +68,19 @@ const formatDateTime = (value: string) =>
     timeStyle: "short"
   }).format(new Date(value));
 
-const mapUrl = (point: MapPoint) => {
+const defaultMapCenter = {
+  latitude: -24.190122,
+  longitude: -65.284801
+};
+
+const mapUrl = (point?: MapPoint | null) => {
   const delta = 0.012;
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${point.longitude - delta}%2C${
-    point.latitude - delta
-  }%2C${point.longitude + delta}%2C${point.latitude + delta}&layer=mapnik&marker=${point.latitude}%2C${
-    point.longitude
-  }`;
+  const center = point ?? defaultMapCenter;
+  const marker = point ? `&marker=${point.latitude}%2C${point.longitude}` : "";
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${center.longitude - delta}%2C${
+    center.latitude - delta
+  }%2C${center.longitude + delta}%2C${center.latitude + delta}&layer=mapnik${marker}`;
 };
 
 const toLocalDateValue = (value: Date) => {
@@ -197,7 +203,7 @@ export default function Home() {
       };
     }
 
-    const latestCheckin = filtered[0];
+    const latestCheckin = filtered.find((item) => item.type === "entrada" && activeInspectorIds.has(item.inspectorId));
     if (!latestCheckin) return null;
 
     return {
@@ -209,7 +215,7 @@ export default function Home() {
       accuracyMeters: latestCheckin.accuracyMeters,
       source: "marca"
     };
-  }, [filteredTracking, filtered, inspectorRecords, inspectors]);
+  }, [filteredTracking, filtered, activeInspectorIds, inspectorRecords, inspectors]);
 
   const beginEditInspector = (inspector: Inspector) => {
     setInspectorForm({
@@ -343,13 +349,12 @@ export default function Home() {
           </div>
 
           <div className="general-map">
+            <iframe
+              className="general-map-frame"
+              src={mapUrl(currentMapPoint)}
+              title="Mapa de ultima ubicacion activa del inspector"
+            />
             {currentMapPoint ? (
-              <>
-                <iframe
-                  className="general-map-frame"
-                  src={mapUrl(currentMapPoint)}
-                  title="Mapa de ultima ubicacion activa del inspector"
-                />
                 <div className="general-map-footer">
                   <strong>{currentMapPoint.inspectorName ?? currentMapPoint.inspectorId}</strong>
                   <span>
@@ -358,12 +363,10 @@ export default function Home() {
                     {currentMapPoint.latitude.toFixed(6)}, {currentMapPoint.longitude.toFixed(6)}
                   </span>
                 </div>
-              </>
             ) : (
-              <div className="empty-map">
-                <MapPinOff size={34} />
-                <strong>Sin ubicaciones registradas</strong>
-                <span>Marque entrada o salida desde la APK para ver una ubicacion.</span>
+              <div className="general-map-footer muted-footer">
+                <strong>Sin ubicacion activa</strong>
+                <span>La ultima marca registrada es una salida o no hay turnos abiertos.</span>
               </div>
             )}
           </div>
