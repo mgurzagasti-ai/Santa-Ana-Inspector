@@ -37,7 +37,7 @@ class ApiClient {
         return postJson("$BASE_URL/api/checkins", payload)
     }
 
-    fun login(employeeCode: String, pin: String): String? {
+    fun login(employeeCode: String, pin: String): LoginResult {
         val payload = JSONObject()
             .put("employeeCode", employeeCode)
             .put("pin", pin)
@@ -50,13 +50,14 @@ class ApiClient {
 
         return try {
             client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return null
+                if (response.code == 401 || response.code == 404) return LoginResult.InvalidCredentials
+                if (!response.isSuccessful) return LoginResult.ConnectionError
 
-                val body = response.body?.string() ?: return null
-                JSONObject(body).getJSONObject("inspector").getString("id")
+                val body = response.body?.string() ?: return LoginResult.ConnectionError
+                LoginResult.Success(JSONObject(body).getJSONObject("inspector").getString("id"))
             }
         } catch (_: Exception) {
-            null
+            LoginResult.ConnectionError
         }
     }
 
@@ -92,5 +93,11 @@ class ApiClient {
         } catch (_: IOException) {
             false
         }
+    }
+
+    sealed class LoginResult {
+        data class Success(val inspectorId: String) : LoginResult()
+        data object InvalidCredentials : LoginResult()
+        data object ConnectionError : LoginResult()
     }
 }

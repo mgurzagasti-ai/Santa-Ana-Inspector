@@ -71,11 +71,17 @@ class MainActivity : AppCompatActivity() {
                         val inspectorId = api.login(legajo, pin)
                         runOnUiThread {
                             isEnabled = true
-                            if (inspectorId != null) {
-                                loggedInspectorId = inspectorId
-                                renderCheckin()
-                            } else {
-                                statusText.text = "No se pudo ingresar. Revise legajo, clave o conexion"
+                            when (inspectorId) {
+                                is ApiClient.LoginResult.Success -> {
+                                    loggedInspectorId = inspectorId.inspectorId
+                                    renderCheckin()
+                                }
+                                ApiClient.LoginResult.InvalidCredentials -> {
+                                    statusText.text = "Inspector no registrado o clave incorrecta"
+                                }
+                                ApiClient.LoginResult.ConnectionError -> {
+                                    statusText.text = "No se pudo conectar con el servidor"
+                                }
                             }
                         }
                     }
@@ -110,6 +116,11 @@ class MainActivity : AppCompatActivity() {
             setOnClickListener { mark("salida") }
         }
 
+        val close = Button(this).apply {
+            text = "Cerrar app"
+            setOnClickListener { closeApp() }
+        }
+
         root.addView(TextView(this).apply {
             text = "Santa Ana Inspector"
             textSize = 24f
@@ -117,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         })
         root.addView(entry)
         root.addView(exit)
+        root.addView(close)
         root.addView(statusText)
         setContentView(root)
     }
@@ -200,6 +212,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun stopTrackingService() {
         stopService(Intent(this, TrackingService::class.java))
+    }
+
+    private fun closeApp() {
+        finishAndRemoveTask()
     }
 
     private fun baseLayout(): LinearLayout {
